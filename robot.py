@@ -1,0 +1,20 @@
+from selenium import webdriver
+import time
+import sys
+browser = webdriver.Firefox()
+browser.get('http://www.timvision.it')
+accedi = browser.find_element_by_link_text('Accedi')
+type(accedi)
+accedi.click()
+time.sleep(3)
+username = browser.find_element_by_id('loginUsernameId')
+username.send_keys('vocedt01@alice.it')
+pwd =browser.find_element_by_id('loginPwdId')
+pwd.send_keys('vocedt01')
+accedi = browser.find_element_by_id('loginBtn')
+accedi.click()
+time.sleep(3)
+browser.get('http://www.timvision.it/detail/'+sys.argv[1])
+time.sleep(3)
+guarda = browser.find_element_by_link_text('Guarda')
+guarda.click()
