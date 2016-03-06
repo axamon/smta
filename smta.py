@@ -1,3 +1,4 @@
+import time
 import pyshark
 import urllib2
 from lxml import etree
@@ -12,7 +13,11 @@ tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.reque
 def sniffa(log):
     while True:
         #log = "test2_00008_20160226164204.pcap"
-        log = rlocal.brpop('listapcap',0)[1]
+        if int(rlocal.llen('listapcap')) > 1:
+                log = rlocal.rpop('listapcap')
+        else:
+            time.sleep(5)
+            pass
         print log
         try:
             cap = pyshark.FileCapture(log)
