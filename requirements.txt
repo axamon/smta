@@ -1,4 +1,4 @@
-ansible==2.0.1.0
+#ansible==2.0.1.0
 #apt-xapian-index==0.44
 argh==0.26.1
 Beaker==1.5.4
