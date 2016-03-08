@@ -3,12 +3,31 @@ import pyshark
 import urllib2
 from lxml import etree
 from urlparse import urlparse
+import requests
 import redis
 rlocal = redis.StrictRedis()
 
 comandodalanciare ='''
 tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.request.full_uri -e http.response.code -e http.content_type -e http.content_length -b duration:5 -b files:5 -w test2.pcap
 '''
+
+def update_stats(context, value, type='test'):
+        destination = 'stats:%s:%s'%(context, type)
+        rlocal.lpush(destination+':tempi', value)
+        rlocal.hsetnx(destination, 'min', value)
+        rlocal.hsetnx(destination, 'max', value)
+        if value < float(rlocal.hget(destination, 'min')):
+                rlocal.hset(destination, 'min', value)
+        if value > float(rlocal.hget(destination, 'max')):
+                rlocal.hset(destination, 'max', value)
+        count = int(rlocal.hincrby(destination, 'count',1))
+        sum = float(rlocal.hincrbyfloat(destination, 'sum', value))
+        sumq = float(rlocal.hincrbyfloat(destination, 'sumq', value*value))
+        avg = sum/count
+        stddev = float(((sumq / count) - (avg ** 2)) ** .5)
+        rlocal.hset(destination,'avg',avg)
+        rlocal.hset(destination,'stddev',stddev)
+
 
 def sniffa(log):
     while True:
