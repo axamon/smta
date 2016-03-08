@@ -5,17 +5,23 @@ from datetime import datetime
 import uuid
 rlocal = redis.StrictRedis()
 
+
 def update_stats(context, value, type='test'):
 	destination = 'stats:%s:%s'%(context, type)
+	rlocal.lpush(destination+':tempi', value)
 	rlocal.hsetnx(destination, 'min', value) 
 	rlocal.hsetnx(destination, 'max', value) 
 	if value < float(rlocal.hget(destination, 'min')):
 		rlocal.hset(destination, 'min', value)
 	if value > float(rlocal.hget(destination, 'max')):
 		rlocal.hset(destination, 'max', value)		
-       	rlocal.hincrby(destination, 'count',1)
-       	rlocal.hincrbyfloat(destination, 'sum', value)
-       	rlocal.hincrbyfloat(destination, 'sumq', value*value)
+       	count = int(rlocal.hincrby(destination, 'count',1))
+       	sum = float(rlocal.hincrbyfloat(destination, 'sum', value))
+       	sumq = float(rlocal.hincrbyfloat(destination, 'sumq', value*value))
+	avg = sum/count
+	stddev = float(((sumq / count) - (avg ** 2)) ** .5) 
+	rlocal.hset(destination,'avg',avg)
+	rlocal.hset(destination,'stddev',stddev)
 
 t=0
 while True:

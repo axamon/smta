@@ -1,4 +1,4 @@
 # smta
 feeder per smta monitoring project
 fase di collaudo
-integrazione con Jenkins test
+redis server DEVE essere almeno versione 3 in poi per permettere l'uso di hincrbyfloat
