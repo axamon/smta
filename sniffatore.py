@@ -1,3 +1,3 @@
 import smta
 
-smta.sniffa('file')
+smta.sniffa2()

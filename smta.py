@@ -6,6 +6,31 @@ from urlparse import urlparse
 import requests
 import redis
 rlocal = redis.StrictRedis()
+from scapy.all import IP, sniff
+from scapy_http import http
+
+
+
+def sniffa2():
+	sniff(filter='tcp', prn=process_tcp_packet)
+
+def process_tcp_packet(packet):
+    '''
+    Processes a TCP packet, and if it contains an HTTP request, it prints it.
+    '''
+    if not packet.haslayer(http.HTTPRequest):
+        # This packet doesn't contain an HTTP request so we skip it
+        return
+    http_layer = packet.getlayer(http.HTTPRequest)
+    ip_layer = packet.getlayer(IP)
+    request = '{1[Host]}{1[Path]}'.format(ip_layer.fields, http_layer.fields)
+    if 'manifest' in request:
+	print request
+	url = 'http://'+request
+	caricamanifest(url)
+    #print '\n {1[Host]}{1[Path]}'.format(ip_layer.fields, http_layer.fields)
+    return
+
 
 comandodalanciare ='''
 tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.request.full_uri -e http.response.code -e http.content_type -e http.content_length -b duration:5 -b files:5 -w test2.pcap
@@ -78,13 +103,14 @@ def sniffa(log):
 
 def caricamanifest(url):
     #url = "http://se-mi1-5.se.vodabr.cb.ticdn.it/videoteca2/V3/SerieTV/2015/10/50521039/SS/10756324/10756324_TV_HD.ism/manifest"
+    print url
     idvideoteca = url.split("/")[8]
-    # print idvideoteca
+    print idvideoteca
     if rlocal.exists(idvideoteca) is False:
         print "rompo le palle a videoteca"
-        m = url.split("ism")[0]
-        manifesturl = m+"ism/manifest"
-        request = urllib2.Request(manifesturl)
+        #m = url.split("ism")[0]
+        #manifesturl = m+"ism/manifest"
+        request = urllib2.Request(url)
         rawPage = urllib2.urlopen(request)
         manifest = rawPage.read()
         tree = etree.XML(manifest)
