@@ -9,14 +9,18 @@ rlocal = redis.StrictRedis()
 from scapy.all import IP, sniff
 from scapy_http import http
 
+comandodalanciare ='''
+tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.request.full_uri -e http.response.code -e http.content_type -e http.content_length -b duration:5 -b files:5 -w test2.pcap
+'''
 
 
-def sniffa2():
-	sniff(filter='tcp', prn=process_tcp_packet)
+def sniffa():
+	sniff(filter='tcp', prn=process_tcp_packet, timeout=20)
+	return url
 
 def process_tcp_packet(packet):
     '''
-    Processes a TCP packet, and if it contains an HTTP request, it prints it.
+    Sniffa il traffico e recupera la richiesta del manifest
     '''
     if not packet.haslayer(http.HTTPRequest):
         # This packet doesn't contain an HTTP request so we skip it
@@ -24,17 +28,37 @@ def process_tcp_packet(packet):
     http_layer = packet.getlayer(http.HTTPRequest)
     ip_layer = packet.getlayer(IP)
     request = '{1[Host]}{1[Path]}'.format(ip_layer.fields, http_layer.fields)
-    if 'manifest' in request:
-	print request
+    #print request
+    if 'anifest' in request:
+	#print request
+	global url
 	url = 'http://'+request
-	caricamanifest(url)
-    #print '\n {1[Host]}{1[Path]}'.format(ip_layer.fields, http_layer.fields)
-    return
+	#caricamanifest(url)
+	return
 
+def scarica(url):
+	'''Scarica tutti i chunk di un film al massimo livello'''
+	idvideoteca = url.split("/")[8]
+	t=0
+	num=0
+	numchunks = int(rlocal.hget(idvideoteca,'chunks'))
+	maxlevel = int(rlocal.hget(idvideoteca,'qualitylevels'))-1
+	maxbitrate = str(rlocal.hget(idvideoteca,maxlevel))
+	#urlbase = url.split("manifest")[0]+"QualityLevels("+maxbitrate+")/Fragments(video="+str(t)+")"
+	while num < numchunks:
+		num = num + 1
+        	#chunk = "http://vodabr.cb.ticdn.it/videoteca2/V3/Film/2014/04/50403788/SS/10422185/10422185.ism/QualityLevels(5500000)/Fragments(video="+str(t)+")"
+		chunk = url.split("Manifest")[0]+"QualityLevels("+maxbitrate+")/Fragments(video="+str(t)+")"
+		print chunk
+        	response = requests.get(chunk)
+        	print response.status_code, response.elapsed.total_seconds(), float(response.headers['Content-Length'])/1024/response.elapsed.total_seconds()/1024, response.headers['VT3'], response.url.split("/")[2]
+        	print response.headers
+        	tts = float(response.elapsed.total_seconds())
+        	print tts
+        	update_stats(idvideoteca, tts)
+        	t=t+20000000
+        	#time.sleep(1)
 
-comandodalanciare ='''
-tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.request.full_uri -e http.response.code -e http.content_type -e http.content_length -b duration:5 -b files:5 -w test2.pcap
-'''
 
 def update_stats(context, value, type='test'):
         destination = 'stats:%s:%s'%(context, type)
@@ -54,7 +78,7 @@ def update_stats(context, value, type='test'):
         rlocal.hset(destination,'stddev',stddev)
 
 
-def sniffa(log):
+def sniffaold(log):
     while True:
         #log = "test2_00008_20160226164204.pcap"
         if int(rlocal.llen('listapcap')) > 1:
@@ -126,3 +150,5 @@ def caricamanifest(url):
                 #rlocal.set(idvideoteca+":livellovideo"+r[i].attrib['Index'], int(r[i].attrib['Bitrate']))
                 #crea un hash in redis con idvideoteca il bitrate e il livello associato
                 rlocal.hset(idvideoteca, int(r[i].attrib['Bitrate']), int(r[i].attrib['Index']))
+                rlocal.hset(idvideoteca, int(r[i].attrib['Index']), int(r[i].attrib['Bitrate']))
+    return
