@@ -5,7 +5,7 @@ import smta
 	sniffa il traffico fino a che non incontra una richista manifest
 '''
 manifest = smta.sniffa()
-#print manifest
+print manifest
 
 '''
 	carica su redis le informazioni importanti del manifest

@@ -37,7 +37,7 @@ def process_tcp_packet(packet):
 	return
 
 def scarica(url):
-	'''Scarica tutti i chunk di un film al massimo livello'''
+	'''Scarica tutti i chunk video di un film al massimo livello'''
 	idvideoteca = url.split("/")[8]
 	t=0
 	num=0
@@ -62,7 +62,7 @@ def scarica(url):
 
 def update_stats(context, value, type='test'):
         destination = 'stats:%s:%s'%(context, type)
-        rlocal.lpush(destination+':tempi', value)
+        #rlocal.lpush(destination+':tempi', value)
         rlocal.hsetnx(destination, 'min', value)
         rlocal.hsetnx(destination, 'max', value)
         if value < float(rlocal.hget(destination, 'min')):
