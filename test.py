@@ -31,3 +31,5 @@ def process_tcp_packet(packet):
 #       ip_layer = packet.getlayer(IP)
 ##      tcpwindow = '{[window]}'.format(tcp_layer.fields)
 ##      print tcpwindow
+
+sniff(filter='tcp and port 80', prn=process_tcp_packet, store=0)
