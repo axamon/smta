@@ -13,6 +13,8 @@ while True:
 		print idvideoteca
 		print '''
 		Copyright Alberto Bregliano
+		
+		tutti i diritti riservati
 		'''
 		time.sleep(3)
 		profile = webdriver.FirefoxProfile()
