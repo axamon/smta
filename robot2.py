@@ -12,6 +12,7 @@ while True:
 		idvideoteca=str(rlocal.brpoplpush('filmdatestare','filmdatestare',0))
 		print idvideoteca
 		print '''
+		integrato con windows
 		Copyright Alberto Bregliano
 		
 		tutti i diritti riservati
