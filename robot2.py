@@ -74,5 +74,6 @@ while True:
 		#guarda.click()
 		time.sleep(30)
 		browser.quit()
+		rlocal.set('chiusura','ok')
 	except:
 		pass
