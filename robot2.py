@@ -12,8 +12,6 @@ while True:
 		idvideoteca=str(rlocal.brpoplpush('filmdatestare','filmdatestare',0))
 		print idvideoteca
 		print '''
-		Sintassi: <username> <password> <id videoteca>	
-		
 		Copyright Alberto Bregliano
 		'''
 		time.sleep(3)
@@ -67,6 +65,10 @@ while True:
 				guarda.click()
 		except:
 			pass
+		for handle in browser.window_handles:
+    			browser.switch_to_window(handle)
+    			browser.maximize_window()
+    			#browser.set_window_size(1920,1080)
 		#guarda.click()
 		time.sleep(30)
 		browser.quit()
