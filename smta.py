@@ -1,18 +1,45 @@
 import time
+import os
 import pyshark
 import urllib2
 from lxml import etree
-from urlparse import urlparse
+#from urlparse import urlparse
 import requests
 import redis
 rlocal = redis.StrictRedis()
-from scapy.all import IP, sniff
-from scapy_http import http
+#from scapy.all import IP, sniff
+#from scapy_http import http
 
 comandodalanciare ='''
 tshark -t e tcp port 80 -Tfields -e frame.time_epoch -e tcp.stream -e http.request.full_uri -e http.response.code -e http.content_type -e http.content_length -b duration:5 -b files:5 -w test2.pcap
 '''
 
+
+def start(idunivoco):
+    'riceve un idunivoco di fruizione e comincia lo sniff'
+    from scapy.all import wrpcap, sniff
+    rlocal.set(idunivoco+"_status",'running')
+    i = 0
+    while True:
+        p= sniff(filter='tcp port 80', iface='eth0', timeout=30)
+        i=i+1
+        filepcap = idunivoco+"_"+str(i)+'.pcap'
+        wrpcap(filepcap,p)
+        rlocal.lpush(idunivoco+"_files",filepcap)
+        if rlocal.get(idunivoco+"_status") == 'stop':
+            break
+        
+def stop(idunivoco):
+    'interrompe lo sniffing'
+    rlocal.set(idunivoco+"_status",'stop')
+    
+def elabora(idunivoco):
+    while True:
+        filepcap = rlocal.brpop(idunivoco+"_files",0)[1]
+        print filepcap
+        os.system('/root/pcap2har/main.py '+filepcap+" "+filepcap+".har")
+        if int(rlocal.llen(idunivoco+"_files")) == 0:
+            break    
 
 def sniffa():
 	sniff(filter='tcp', prn=process_tcp_packet, timeout=20)
