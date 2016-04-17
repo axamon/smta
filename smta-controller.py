@@ -14,11 +14,15 @@ rlocal = redis.StrictRedis()
 
 def start(idunivoco):
     "starta la raccolta dati"
-    rlocal.set('fruizione',idunivoco)
+    if int(rlocal.setnx('fruizione',idunivoco)) == 0:
+	print "Devi prima spegnere"
+    else:
+        print "Raccolta statistiche avviata"
 
 def stop(idunivoco):
     'interrompe lo sniffing'
     rlocal.delete('fruizione')
+    print "Raccolta statistiche interrotta"
     
 def elabora(idunivoco):
     "crea file csv da stats"
